@@ -17,9 +17,3 @@ body {
 #game-canvas {
   border: 1px solid #fff;
 }
-
-#score, #lives {
-  color: #fff;
-  margin-top: 10px;
-  display: none; /* Hide the HTML elements */
-}
