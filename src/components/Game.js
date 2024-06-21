@@ -1,4 +1,3 @@
-// src/components/Game.js
 import { Player } from "./Player.js";
 import { Enemy } from "./Enemy.js";
 import { Bullet } from "./Bullet.js";
@@ -8,7 +7,7 @@ export class Game {
   constructor(canvas) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
-    this.groundHeight = 50; // Height of the ground from the bottom of the canvas
+    this.groundHeight = 50;
     this.player = new Player(this.canvas, this.groundHeight);
     this.enemies = [];
     this.bullets = [];
@@ -16,6 +15,7 @@ export class Game {
     this.lives = 3;
     this.images = {};
     this.keys = {};
+    this.lastTime = 0;
     this.loadImages();
     this.addEventListeners();
   }
@@ -42,7 +42,7 @@ export class Game {
     Promise.all(Object.values(this.images).map(img => new Promise(resolve => img.onload = resolve)))
       .then(() => {
         this.spawnEnemies();
-        this.gameLoop();
+        this.gameLoop(performance.now());
       });
   }
 
@@ -54,15 +54,15 @@ export class Game {
     }
   }
 
-  update() {
-    if (this.keys['ArrowLeft']) this.player.moveLeft();
-    if (this.keys['ArrowRight']) this.player.moveRight();
+  update(deltaTime) {
+    if (this.keys['ArrowLeft']) this.player.moveLeft(deltaTime);
+    if (this.keys['ArrowRight']) this.player.moveRight(deltaTime);
 
-    this.player.update();
-    this.enemies.forEach(enemy => enemy.update());
+    this.player.update(deltaTime);
+    this.enemies.forEach(enemy => enemy.update(deltaTime));
     
     this.bullets = this.bullets.filter(bullet => {
-      bullet.update();
+      bullet.update(deltaTime);
       return bullet.y > 0 && bullet.y < this.canvas.height;
     });
 
@@ -121,9 +121,13 @@ export class Game {
     }
   }
 
-  gameLoop() {
-    this.update();
+  gameLoop(currentTime) {
+    const deltaTime = (currentTime - this.lastTime) / 1000;
+    this.lastTime = currentTime;
+
+    this.update(deltaTime);
     this.draw();
-    requestAnimationFrame(() => this.gameLoop());
+
+    requestAnimationFrame(this.gameLoop.bind(this));
   }
 }
