@@ -1,32 +1,51 @@
-import { Bullet } from './Bullet.js'
+import { Bullet } from './Bullet.js';
 
 export class Player {
-  constructor(x, y) {
-    this.x = x
-    this.y = y
-    this.width = 30
-    this.height = 30
-    this.speed = 5
+  constructor(canvas, game) {  // Added 'game' parameter
+    this.canvas = canvas;
+    this.game = game;  // Store the game instance
+    this.width = 50;
+    this.height = 50;
+    this.x = canvas.width / 2 - this.width / 2;
+    this.y = canvas.height - this.height - 10;
+    this.speed = 5;
+    this.color = 'blue';
+
+    this.moveLeft = false;
+    this.moveRight = false;
+
+    document.addEventListener('keydown', this.handleKeyDown.bind(this));
+    document.addEventListener('keyup', this.handleKeyUp.bind(this));
+  }
+
+  handleKeyDown(e) {
+    if (e.key === 'ArrowLeft') this.moveLeft = true;
+    if (e.key === 'ArrowRight') this.moveRight = true;
+    if (e.key === ' ') this.shoot();  // Added shooting on spacebar
+  }
+
+  handleKeyUp(e) {
+    if (e.key === 'ArrowLeft') this.moveLeft = false;
+    if (e.key === 'ArrowRight') this.moveRight = false;
   }
 
   update() {
-    if (keys.ArrowLeft && this.x > 0) this.x -= this.speed
-    if (keys.ArrowRight && this.x < 800 - this.width) this.x += this.speed
+    if (this.moveLeft && this.x > 0) this.x -= this.speed;
+    if (this.moveRight && this.x < this.canvas.width - this.width) this.x += this.speed;
   }
 
   draw(ctx) {
-    ctx.fillStyle = 'green'
-    ctx.fillRect(this.x, this.y, this.width, this.height)
+    ctx.fillStyle = this.color;
+    ctx.fillRect(this.x, this.y, this.width, this.height);
   }
 
-  shoot() {
-    return new Bullet(this.x + this.width / 2, this.y, -10, true)
+  shoot() {  // New method for shooting
+    const bullet = new Bullet(
+      this.x + this.width / 2 - 2.5,
+      this.y,
+      10,
+      'yellow'
+    );
+    this.game.bullets.push(bullet);
   }
 }
-
-const keys = {}
-window.addEventListener('keydown', e => keys[e.code] = true)
-window.addEventListener('keyup', e => keys[e.code] = false)
-window.addEventListener('keydown', e => {
-  if (e.code === 'Space') game.bullets.push(game.player.shoot())
-})
