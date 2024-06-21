@@ -18,6 +18,8 @@ export class Game {
     this.lastTime = 0;
     this.loadImages();
     this.addEventListeners();
+    this.isGameOver = false;
+    this.addClickListener();
   }
 
   loadImages() {
@@ -34,6 +36,14 @@ export class Game {
     window.addEventListener('keypress', (e) => {
       if (e.code === 'Space') {
         this.shoot();
+      }
+    this.addClickListener();  
+    });
+  }
+  addClickListener() {
+    this.canvas.addEventListener('click', () => {
+      if (this.isGameOver) {
+        this.restart();
       }
     });
   }
@@ -67,7 +77,45 @@ export class Game {
     });
 
     this.checkCollisions();
+    this.checkEnemyReachedPlayer();
   }
+
+  checkEnemyReachedPlayer() {
+    const playerTop = this.player.y;
+    for (const enemy of this.enemies) {
+      if (enemy.y + enemy.height >= playerTop) {
+        this.gameOver();
+        return;
+      }
+    }
+  }
+  gameOver() {
+    this.isGameOver = true;
+    this.drawGameOverMessage();
+  }
+  drawGameOverMessage() {
+    this.ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
+    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+    this.ctx.fillStyle = 'white';
+    this.ctx.font = '48px Arial';
+    this.ctx.textAlign = 'center';
+    this.ctx.fillText('Game Over', this.canvas.width / 2, this.canvas.height / 2 - 50);
+    this.ctx.fillText('You Lose', this.canvas.width / 2, this.canvas.height / 2 + 10);
+    
+    this.ctx.font = '24px Arial';
+    this.ctx.fillText('Click to Start Again', this.canvas.width / 2, this.canvas.height / 2 + 60);
+  }
+  restart() {
+    this.isGameOver = false;
+    this.score = 0;
+    this.lives = 3;
+    this.enemies = [];
+    this.bullets = [];
+    this.player = new Player(this.canvas, this.groundHeight);
+    this.spawnEnemies();
+  }
+
 
   drawBackground() {
     this.ctx.fillStyle = 'black';
@@ -82,14 +130,32 @@ export class Game {
     
     this.drawBackground();
 
-    this.player.draw(this.ctx);
-    this.enemies.forEach(enemy => enemy.draw(this.ctx));
-    this.bullets.forEach(bullet => bullet.draw(this.ctx));
+    if (!this.isGameOver) {
+      this.player.draw(this.ctx);
+      this.enemies.forEach(enemy => enemy.draw(this.ctx));
+      this.bullets.forEach(bullet => bullet.draw(this.ctx));
+    }
 
+    this.drawScore();
+    this.drawLives();
+
+    if (this.isGameOver) {
+      this.drawGameOverMessage();
+    }
+  }
+
+  drawScore() {
     this.ctx.fillStyle = 'white';
     this.ctx.font = '20px Arial';
+    this.ctx.textAlign = 'left';
     this.ctx.fillText(`Score: ${this.score}`, 10, 30);
-    this.ctx.fillText(`Lives: ${this.lives}`, this.canvas.width - 100, 30);
+  }
+
+  drawLives() {
+    this.ctx.fillStyle = 'white';
+    this.ctx.font = '20px Arial';
+    this.ctx.textAlign = 'right';
+    this.ctx.fillText(`Lives: ${this.lives}`, this.canvas.width - 10, 30);
   }
 
   shoot() {
@@ -127,6 +193,10 @@ export class Game {
 
     this.update(deltaTime);
     this.draw();
+
+    if (this.isGameOver) {
+      this.drawGameOverMessage();
+    }
 
     requestAnimationFrame(this.gameLoop.bind(this));
   }
