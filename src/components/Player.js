@@ -1,51 +1,46 @@
+// src/components/Player.js
 import { Bullet } from './Bullet.js';
 
 export class Player {
-  constructor(canvas, game) {  // Added 'game' parameter
+  constructor(canvas, groundHeight) {
     this.canvas = canvas;
-    this.game = game;  // Store the game instance
     this.width = 50;
     this.height = 50;
     this.x = canvas.width / 2 - this.width / 2;
-    this.y = canvas.height - this.height - 10;
+    this.groundHeight = groundHeight;
+    this.y = canvas.height - this.height - this.groundHeight + 10; // Adjust this value as needed
     this.speed = 5;
-    this.color = 'blue';
-
-    this.moveLeft = false;
-    this.moveRight = false;
-
-    document.addEventListener('keydown', this.handleKeyDown.bind(this));
-    document.addEventListener('keyup', this.handleKeyUp.bind(this));
+    this.image = new Image();
+    this.image.src = './assets/player.svg';
+    this.cooldown = 0;
   }
 
-  handleKeyDown(e) {
-    if (e.key === 'ArrowLeft') this.moveLeft = true;
-    if (e.key === 'ArrowRight') this.moveRight = true;
-    if (e.key === ' ') this.shoot();  // Added shooting on spacebar
+  moveLeft() {
+    this.x = Math.max(0, this.x - this.speed);
   }
 
-  handleKeyUp(e) {
-    if (e.key === 'ArrowLeft') this.moveLeft = false;
-    if (e.key === 'ArrowRight') this.moveRight = false;
+  moveRight() {
+    this.x = Math.min(this.canvas.width - this.width, this.x + this.speed);
   }
 
   update() {
-    if (this.moveLeft && this.x > 0) this.x -= this.speed;
-    if (this.moveRight && this.x < this.canvas.width - this.width) this.x += this.speed;
+    if (this.cooldown > 0) this.cooldown--;
+  }
+
+  shoot() {
+    if (this.cooldown === 0) {
+      this.cooldown = 30;
+      return new Bullet(this.x + this.width / 2, this.y, -5, true);
+    }
+    return null;
   }
 
   draw(ctx) {
-    ctx.fillStyle = this.color;
-    ctx.fillRect(this.x, this.y, this.width, this.height);
-  }
+    // Draw the player image
+    ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
 
-  shoot() {  // New method for shooting
-    const bullet = new Bullet(
-      this.x + this.width / 2 - 2.5,
-      this.y,
-      10,
-      'yellow'
-    );
-    this.game.bullets.push(bullet);
+    // Uncomment the following lines to debug the player's position
+    // ctx.strokeStyle = 'red';
+    // ctx.strokeRect(this.x, this.y, this.width, this.height);
   }
 }

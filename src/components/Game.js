@@ -1,3 +1,4 @@
+// src/components/Game.js
 import { Player } from "./Player.js";
 import { Enemy } from "./Enemy.js";
 import { Bullet } from "./Bullet.js";
@@ -7,97 +8,117 @@ export class Game {
   constructor(canvas) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
-    this.player = new Player(this.canvas, this);  // Pass 'this' as the game instance
+    this.groundHeight = 50; // Height of the ground from the bottom of the canvas
+    this.player = new Player(this.canvas, this.groundHeight);
     this.enemies = [];
     this.bullets = [];
     this.score = 0;
     this.lives = 3;
+    this.images = {};
+    this.keys = {};
+    this.loadImages();
+    this.addEventListeners();
+  }
+
+  loadImages() {
+    const imageNames = ['player', 'enemy', 'bullet'];
+    imageNames.forEach(name => {
+      this.images[name] = new Image();
+      this.images[name].src = `./assets/${name}.svg`;
+    });
+  }
+
+  addEventListeners() {
+    window.addEventListener('keydown', (e) => this.keys[e.code] = true);
+    window.addEventListener('keyup', (e) => this.keys[e.code] = false);
+    window.addEventListener('keypress', (e) => {
+      if (e.code === 'Space') {
+        this.shoot();
+      }
+    });
   }
 
   start() {
-    this.spawnEnemies();
-    this.gameLoop();
+    Promise.all(Object.values(this.images).map(img => new Promise(resolve => img.onload = resolve)))
+      .then(() => {
+        this.spawnEnemies();
+        this.gameLoop();
+      });
   }
 
   spawnEnemies() {
-    for (let row = 0; row < 5; row++) {
-      for (let col = 0; col < 10; col++) {
-        const enemy = new Enemy(
-          30 + col * 60,
-          30 + row * 60,
-          40,
-          40,
-          'red'
-        );
-        this.enemies.push(enemy);
+    for (let i = 0; i < 5; i++) {
+      for (let j = 0; j < 10; j++) {
+        this.enemies.push(new Enemy(j * 60 + 50, i * 60 + 50));
       }
     }
   }
 
   update() {
+    if (this.keys['ArrowLeft']) this.player.moveLeft();
+    if (this.keys['ArrowRight']) this.player.moveRight();
+
     this.player.update();
     this.enemies.forEach(enemy => enemy.update());
-    this.bullets.forEach((bullet, index) => {
+    
+    this.bullets = this.bullets.filter(bullet => {
       bullet.update();
-      if (bullet.y < 0 || bullet.y > this.canvas.height) {
-        this.bullets.splice(index, 1);
-      }
+      return bullet.y > 0 && bullet.y < this.canvas.height;
     });
+
     this.checkCollisions();
+  }
+
+  drawBackground() {
+    this.ctx.fillStyle = 'black';
+    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height - this.groundHeight);
+
+    this.ctx.fillStyle = '#4a6741';
+    this.ctx.fillRect(0, this.canvas.height - this.groundHeight, this.canvas.width, this.groundHeight);
   }
 
   draw() {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    
+    this.drawBackground();
+
     this.player.draw(this.ctx);
     this.enemies.forEach(enemy => enemy.draw(this.ctx));
     this.bullets.forEach(bullet => bullet.draw(this.ctx));
-    this.drawScore();
-    this.drawLives();
+
+    this.ctx.fillStyle = 'white';
+    this.ctx.font = '20px Arial';
+    this.ctx.fillText(`Score: ${this.score}`, 10, 30);
+    this.ctx.fillText(`Lives: ${this.lives}`, this.canvas.width - 100, 30);
+  }
+
+  shoot() {
+    const bullet = this.player.shoot();
+    if (bullet) {
+      this.bullets.push(bullet);
+    }
   }
 
   checkCollisions() {
-    this.bullets.forEach((bullet, bulletIndex) => {
-      this.enemies.forEach((enemy, enemyIndex) => {
-        if (checkCollision(bullet, enemy)) {
-          this.bullets.splice(bulletIndex, 1);
-          this.enemies.splice(enemyIndex, 1);
-          this.score += 10;
+    for (let i = this.bullets.length - 1; i >= 0; i--) {
+      const bullet = this.bullets[i];
+      if (bullet.isPlayerBullet) {
+        for (let j = this.enemies.length - 1; j >= 0; j--) {
+          const enemy = this.enemies[j];
+          if (checkCollision(bullet, enemy)) {
+            this.bullets.splice(i, 1);
+            this.enemies.splice(j, 1);
+            this.score += 10;
+            break;
+          }
         }
-      });
-    });
-
-    this.enemies.forEach(enemy => {
-      if (checkCollision(this.player, enemy) || enemy.y + enemy.height >= this.canvas.height) {
-        this.lives--;
-        if (this.lives <= 0) {
-          alert('Game Over! Your score: ' + this.score);
-          this.reset();
-        } else {
-          this.resetLevel();
+      } else {
+        if (checkCollision(bullet, this.player)) {
+          this.bullets.splice(i, 1);
+          this.lives--;
         }
       }
-    });
-  }
-
-  resetLevel() {
-    this.enemies = [];
-    this.bullets = [];
-    this.spawnEnemies();
-    this.player.x = this.canvas.width / 2 - this.player.width / 2;
-  }
-
-  reset() {
-    this.score = 0;
-    this.lives = 3;
-    this.resetLevel();
-  }
-
-  drawScore() {
-    document.getElementById('score-value').textContent = this.score;
-  }
-
-  drawLives() {
-    document.getElementById('lives-value').textContent = this.lives;
+    }
   }
 
   gameLoop() {

@@ -7,7 +7,7 @@ document.querySelector('#app').innerHTML = `
     <div id="score">Score: <span id="score-value">0</span></div>
     <div id="lives">Lives: <span id="lives-value">3</span></div>
   </div>
-`
+`;
 
 const canvas = document.querySelector('#game-canvas');
 const game = new Game(canvas);

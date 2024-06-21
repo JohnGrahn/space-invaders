@@ -1,12 +1,13 @@
 export class Enemy {
-  constructor(x, y, width, height, color) {
+  constructor(x, y) {
     this.x = x;
     this.y = y;
-    this.width = width;
-    this.height = height;
-    this.color = color;
+    this.width = 40;
+    this.height = 40;
     this.speed = 1;
     this.direction = 1;
+    this.image = new Image();
+    this.image.src = '/assets/enemy.svg';
   }
 
   update() {
@@ -18,7 +19,6 @@ export class Enemy {
   }
 
   draw(ctx) {
-    ctx.fillStyle = this.color;
-    ctx.fillRect(this.x, this.y, this.width, this.height);
+    ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
   }
 }
