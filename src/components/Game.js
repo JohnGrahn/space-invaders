@@ -19,6 +19,7 @@ export class Game {
     this.loadImages();
     this.addEventListeners();
     this.isGameOver = false;
+    this.hasWon = false;
     this.addClickListener();
   }
 
@@ -78,6 +79,13 @@ export class Game {
 
     this.checkCollisions();
     this.checkEnemyReachedPlayer();
+    this.checkAllEnemiesDefeated();  
+  }
+
+  checkAllEnemiesDefeated() {
+    if (this.enemies.length === 0) {
+      this.win();
+    }
   }
 
   checkEnemyReachedPlayer() {
@@ -89,9 +97,13 @@ export class Game {
       }
     }
   }
-  gameOver() {
+  gameOver(hasWon) {
     this.isGameOver = true;
+    this.hasWon = hasWon;
     this.drawGameOverMessage();
+  }
+  win() {
+    this.gameOver(true);
   }
   drawGameOverMessage() {
     this.ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
@@ -100,14 +112,22 @@ export class Game {
     this.ctx.fillStyle = 'white';
     this.ctx.font = '48px Arial';
     this.ctx.textAlign = 'center';
-    this.ctx.fillText('Game Over', this.canvas.width / 2, this.canvas.height / 2 - 50);
-    this.ctx.fillText('You Lose', this.canvas.width / 2, this.canvas.height / 2 + 10);
+    
+    if (this.hasWon) {
+      this.ctx.fillText('Congratulations!', this.canvas.width / 2, this.canvas.height / 2 - 50);
+      this.ctx.fillText('You Won!', this.canvas.width / 2, this.canvas.height / 2 + 10);
+    } else {
+      this.ctx.fillText('Game Over', this.canvas.width / 2, this.canvas.height / 2 - 50);
+      this.ctx.fillText('You Lose', this.canvas.width / 2, this.canvas.height / 2 + 10);
+    }
     
     this.ctx.font = '24px Arial';
-    this.ctx.fillText('Click to Start Again', this.canvas.width / 2, this.canvas.height / 2 + 60);
+    this.ctx.fillText('Click to Play Again', this.canvas.width / 2, this.canvas.height / 2 + 60);
   }
+
   restart() {
     this.isGameOver = false;
+    this.hasWon = false;
     this.score = 0;
     this.lives = 3;
     this.enemies = [];
