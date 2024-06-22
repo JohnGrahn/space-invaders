@@ -15,8 +15,20 @@ export class EnemyController {
   
     spawnEnemies() {
       for (let i = 0; i < 5; i++) {
-        for (let j = 0; j < 10; j++) {
-          this.enemies.push(new Enemy(j * 60 + 50, i * 60 + 50));
+        for (let j = 0; j < 11; j++) {
+          let enemyType;
+          if (i === 0) {
+            enemyType = 'squid';
+          } else if (i === 1) {
+            enemyType = 'invader';
+          } else if (i === 2) {
+            enemyType = 'invader';  // Swapped: This row is now invaders
+          } else if (i === 3) {
+            enemyType = 'enemy';    // Swapped: This row is now the original enemy.svg
+          } else {
+            enemyType = 'crab';
+          }
+          this.enemies.push(new Enemy(j * 50 + 30, i * 50 + 30, enemyType));
         }
       }
     }
