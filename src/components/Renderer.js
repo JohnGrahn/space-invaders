@@ -12,11 +12,11 @@ export class Renderer {
       this.ctx.fillRect(0, this.canvas.height - groundHeight, this.canvas.width, groundHeight);
     }
   
-    drawEntities(player, enemies, bullets) {
-      player.draw(this.ctx);
-      enemies.forEach(enemy => enemy.draw(this.ctx));
-      bullets.forEach(bullet => bullet.draw(this.ctx));
-    }
+    drawEntities(player, enemyController, bullets) {
+        player.draw(this.ctx);
+        enemyController.enemies.forEach(enemy => enemy.draw(this.ctx));
+        bullets.forEach(bullet => bullet.draw(this.ctx));
+      }
   
     drawUI(score, lives) {
         this.ctx.fillStyle = 'white';

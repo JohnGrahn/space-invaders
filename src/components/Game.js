@@ -1,10 +1,9 @@
 import { Player } from "./Player.js";
-import { Enemy } from "./Enemy.js";
-import { Bullet } from "./Bullet.js";
 import { GameState } from "./GameState.js";
 import { Renderer } from "./Renderer.js";
 import { InputHandler } from "./InputHandler.js";
 import { CollisionDetector } from "../utils/CollisionDetector.js";
+import { EnemyController } from "./EnemyController.js";
 
 export class Game {
   constructor(canvas) {
@@ -17,8 +16,8 @@ export class Game {
     this.enemies = [];
     this.bullets = [];
     this.lastTime = 0;
-    this.spawnEnemies();
     this.addClickListener();
+    this.enemyController = new EnemyController(canvas.width);
   }
 
   addClickListener() {
@@ -29,19 +28,13 @@ export class Game {
     });
   }
 
-  spawnEnemies() {
-    for (let i = 0; i < 5; i++) {
-      for (let j = 0; j < 10; j++) {
-        this.enemies.push(new Enemy(j * 60 + 50, i * 60 + 50));
-      }
-    }
-  }
+  
 
   update(deltaTime) {
     if (this.gameState.isGameOver) return;
 
     this.updatePlayer(deltaTime);
-    this.updateEnemies(deltaTime);
+    this.enemyController.update(deltaTime);
     this.updateBullets(deltaTime);
     this.handleCollisions();
     this.checkWinCondition();
@@ -66,20 +59,23 @@ export class Game {
   }
 
   handleCollisions() {
-    const bulletEnemyCollisions = CollisionDetector.checkBulletEnemyCollisions(this.bullets, this.enemies);
-    bulletEnemyCollisions.forEach(({ bullet, enemy }) => {
-      this.bullets.splice(bullet, 1);
-      this.enemies.splice(enemy, 1);
+    const bulletEnemyCollisions = CollisionDetector.checkBulletEnemyCollisions(this.bullets, this.enemyController);
+    bulletEnemyCollisions.forEach(({ bulletIndex, enemyIndex }) => {
+      this.bullets.splice(bulletIndex, 1);
+      this.enemyController.removeEnemy(enemyIndex);
       this.gameState.increaseScore(10);
     });
 
-    if (CollisionDetector.checkEnemyPlayerCollision(this.enemies, this.player)) {
+    if (CollisionDetector.checkEnemyPlayerCollision(this.enemyController, this.player)) {
       this.gameState.decreaseLives();
+      if (this.gameState.lives <= 0) {
+        this.gameState.isGameOver = true;
+      }
     }
   }
 
   checkWinCondition() {
-    if (this.enemies.length === 0) {
+    if (this.enemyController.getEnemies().length === 0) {
       this.gameState.hasWon = true;
       this.gameState.isGameOver = true;
     }
@@ -94,7 +90,7 @@ export class Game {
 
   draw() {
     this.renderer.drawBackground(this.groundHeight);
-    this.renderer.drawEntities(this.player, this.enemies, this.bullets);
+    this.renderer.drawEntities(this.player, this.enemyController, this.bullets);
     this.renderer.drawUI(this.gameState.score, this.gameState.lives);
     if (this.gameState.isGameOver) {
       this.renderer.drawGameOverMessage(this.gameState.hasWon);
@@ -114,9 +110,10 @@ export class Game {
   restart() {
     this.gameState.reset();
     this.player = new Player(this.canvas, this.groundHeight);
-    this.enemies = [];
+    this.enemyController = new EnemyController(this.canvas.width);
+    this.enemyController.spawnEnemies();
     this.bullets = [];
-    this.spawnEnemies();
+    
   }
 
   start() {
