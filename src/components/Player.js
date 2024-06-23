@@ -1,4 +1,3 @@
-// src/components/Player.js
 import { Bullet } from './Bullet.js';
 
 export class Player {
@@ -6,13 +5,16 @@ export class Player {
     this.canvas = canvas;
     this.width = 50;
     this.height = 50;
-    this.x = canvas.width / 2 - this.width / 2;
     this.groundHeight = groundHeight;
-    this.y = canvas.height - this.height - this.groundHeight + 10; // Adjust this value as needed
     this.speed = 5;
+    this.cooldown = 0;
+    this.maxCooldown = 30;
+    this.bulletSpeed = -5;
+
+    this.reset();
+
     this.image = new Image();
     this.image.src = './assets/player.svg';
-    this.cooldown = 0;
   }
 
   moveLeft() {
@@ -29,19 +31,19 @@ export class Player {
 
   shoot() {
     if (this.cooldown === 0) {
-      this.cooldown = 30;
-      return new Bullet(this.x + this.width / 2, this.y, -5, true);
+      this.cooldown = this.maxCooldown;
+      return new Bullet(this.x + this.width / 2, this.y, this.bulletSpeed, true);
     }
     return null;
   }
 
   reset() {
     this.x = this.canvas.width / 2 - this.width / 2;
+    this.y = this.canvas.height - this.height - this.groundHeight + 10;
     // You might want to add invincibility frames here
   }
 
   draw(ctx) {
-    // Draw the player image
     ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
 
     // Uncomment the following lines to debug the player's position
