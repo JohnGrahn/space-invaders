@@ -35,6 +35,11 @@ export class Player {
     return null;
   }
 
+  reset() {
+    this.x = this.canvas.width / 2 - this.width / 2;
+    // You might want to add invincibility frames here
+  }
+
   draw(ctx) {
     // Draw the player image
     ctx.drawImage(this.image, this.x, this.y, this.width, this.height);

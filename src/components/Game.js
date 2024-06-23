@@ -44,6 +44,28 @@ export class Game {
         this.bullets.push(enemyBullet);
       }
     }
+    this.bullets.forEach((bullet, index) => {
+      bullet.update();
+
+      // Check for bullet-player collision
+      if (!bullet.isPlayerBullet && CollisionDetector.checkBulletPlayerCollision(bullet, this.player)) {
+        this.bullets.splice(index, 1);
+        this.playerHit();
+      }
+
+      // Remove bullets that are off-screen
+      if (bullet.y < 0 || bullet.y > this.canvas.height) {
+        this.bullets.splice(index, 1);
+      }
+    });
+  }
+  playerHit() {
+    this.gameState.decreaseLives();
+    if (this.gameState.lives <= 0) {
+      this.gameState.isGameOver = true;
+    } else {
+      this.player.reset();
+    }
   }
 
   updatePlayer(deltaTime) {
@@ -101,6 +123,7 @@ export class Game {
     if (this.gameState.isGameOver) {
       this.renderer.drawGameOverMessage(this.gameState.hasWon);
     }
+    
   }
 
   gameLoop(currentTime) {

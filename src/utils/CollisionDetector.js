@@ -24,4 +24,8 @@ export class CollisionDetector {
   static checkEnemyPlayerCollision(enemyController, player) {
     return enemyController.getEnemies().some(enemy => this.checkCollision(enemy, player));
   }
+  static checkBulletPlayerCollision(bullet, player) {
+    return this.checkCollision(bullet, player);
+  }
+
 }
