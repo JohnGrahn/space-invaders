@@ -13,22 +13,18 @@ export class Game {
     this.inputHandler = new InputHandler();
     this.groundHeight = 50;
     this.player = new Player(canvas, this.groundHeight);
-    this.enemies = [];
     this.bullets = [];
     this.lastTime = 0;
-    this.addClickListener();
     this.enemyController = new EnemyController(canvas.width);
+    this.enemyShootProbability = 0.02;
+    this.addClickListener();
   }
 
   addClickListener() {
     this.canvas.addEventListener('click', () => {
-      if (this.gameState.isGameOver) {
-        this.restart();
-      }
+      if (this.gameState.isGameOver) this.restart();
     });
   }
-
-  
 
   update(deltaTime) {
     if (this.gameState.isGameOver) return;
@@ -38,34 +34,7 @@ export class Game {
     this.updateBullets(deltaTime);
     this.handleCollisions();
     this.checkWinCondition();
-    if (Math.random() < 0.02) { // Adjust this value to control shooting frequency
-      const enemyBullet = this.enemyController.shoot();
-      if (enemyBullet) {
-        this.bullets.push(enemyBullet);
-      }
-    }
-    this.bullets.forEach((bullet, index) => {
-      bullet.update();
-
-      // Check for bullet-player collision
-      if (!bullet.isPlayerBullet && CollisionDetector.checkBulletPlayerCollision(bullet, this.player)) {
-        this.bullets.splice(index, 1);
-        this.playerHit();
-      }
-
-      // Remove bullets that are off-screen
-      if (bullet.y < 0 || bullet.y > this.canvas.height) {
-        this.bullets.splice(index, 1);
-      }
-    });
-  }
-  playerHit() {
-    this.gameState.decreaseLives();
-    if (this.gameState.lives <= 0) {
-      this.gameState.isGameOver = true;
-    } else {
-      this.player.reset();
-    }
+    this.handleEnemyShooting();
   }
 
   updatePlayer(deltaTime) {
@@ -75,30 +44,36 @@ export class Game {
     this.player.update(deltaTime);
   }
 
-  updateEnemies(deltaTime) {
-    this.enemies.forEach(enemy => enemy.update(deltaTime));
-  }
-
   updateBullets(deltaTime) {
     this.bullets = this.bullets.filter(bullet => {
       bullet.update(deltaTime);
+      if (!bullet.isPlayerBullet && CollisionDetector.checkBulletPlayerCollision(bullet, this.player)) {
+        this.playerHit();
+        return false;
+      }
       return bullet.y > 0 && bullet.y < this.canvas.height;
     });
   }
 
   handleCollisions() {
-    const bulletEnemyCollisions = CollisionDetector.checkBulletEnemyCollisions(this.bullets, this.enemyController);
+    const bulletEnemyCollisions = CollisionDetector.checkBulletEnemyCollisions(this.bullets, this.enemyController.getEnemies());
     bulletEnemyCollisions.forEach(({ bulletIndex, enemyIndex }) => {
       this.bullets.splice(bulletIndex, 1);
       this.enemyController.removeEnemy(enemyIndex);
       this.gameState.increaseScore(10);
     });
 
-    if (CollisionDetector.checkEnemyPlayerCollision(this.enemyController, this.player)) {
-      this.gameState.decreaseLives();
-      if (this.gameState.lives <= 0) {
-        this.gameState.isGameOver = true;
-      }
+    if (CollisionDetector.checkEnemyPlayerCollision(this.enemyController.getEnemies(), this.player)) {
+      this.playerHit();
+    }
+  }
+
+  playerHit() {
+    this.gameState.decreaseLives();
+    if (this.gameState.lives <= 0) {
+      this.gameState.isGameOver = true;
+    } else {
+      this.player.reset();
     }
   }
 
@@ -109,11 +84,16 @@ export class Game {
     }
   }
 
+  handleEnemyShooting() {
+    if (Math.random() < this.enemyShootProbability) {
+      const enemyBullet = this.enemyController.shoot();
+      if (enemyBullet) this.bullets.push(enemyBullet);
+    }
+  }
+
   shoot() {
     const bullet = this.player.shoot();
-    if (bullet) {
-      this.bullets.push(bullet);
-    }
+    if (bullet) this.bullets.push(bullet);
   }
 
   draw() {
@@ -123,7 +103,6 @@ export class Game {
     if (this.gameState.isGameOver) {
       this.renderer.drawGameOverMessage(this.gameState.hasWon);
     }
-    
   }
 
   gameLoop(currentTime) {
@@ -140,9 +119,7 @@ export class Game {
     this.gameState.reset();
     this.player = new Player(this.canvas, this.groundHeight);
     this.enemyController = new EnemyController(this.canvas.width);
-    this.enemyController.spawnEnemies();
     this.bullets = [];
-    
   }
 
   start() {
