@@ -38,6 +38,12 @@ export class Game {
     this.updateBullets(deltaTime);
     this.handleCollisions();
     this.checkWinCondition();
+    if (Math.random() < 0.02) { // Adjust this value to control shooting frequency
+      const enemyBullet = this.enemyController.shoot();
+      if (enemyBullet) {
+        this.bullets.push(enemyBullet);
+      }
+    }
   }
 
   updatePlayer(deltaTime) {
