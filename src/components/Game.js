@@ -42,6 +42,7 @@ export class Game {
     if (this.inputHandler.isKeyPressed('ArrowRight')) this.player.moveRight(deltaTime);
     if (this.inputHandler.isKeyPressed('Space')) this.shoot();
     this.player.update(deltaTime);
+    this.player.updateInvincibility(deltaTime);
   }
 
   updateBullets(deltaTime) {
@@ -69,11 +70,14 @@ export class Game {
   }
 
   playerHit() {
-    this.gameState.decreaseLives();
-    if (this.gameState.lives <= 0) {
-      this.gameState.isGameOver = true;
-    } else {
-      this.player.reset();
+    if (!this.player.isInvincible) {
+      this.gameState.decreaseLives();
+      if (this.gameState.lives <= 0) {
+        this.gameState.isGameOver = true;
+      } else {
+        this.player.reset();
+        this.player.makeInvincible(); // Apply invincibility after hit
+      }
     }
   }
 

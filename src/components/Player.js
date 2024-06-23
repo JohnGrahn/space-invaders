@@ -10,6 +10,9 @@ export class Player {
     this.cooldown = 0;
     this.maxCooldown = 30;
     this.bulletSpeed = -5;
+    this.isInvincible = false;
+    this.invincibilityDuration = 2; // 2 seconds of invincibility
+    this.invincibilityTimer = 0;
 
     this.reset();
 
@@ -43,9 +46,29 @@ export class Player {
     // You might want to add invincibility frames here
   }
 
-  draw(ctx) {
-    ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+  makeInvincible() {
+    this.isInvincible = true;
+    this.invincibilityTimer = this.invincibilityDuration;
+  }
 
+  updateInvincibility(deltaTime) {
+    if (this.isInvincible) {
+      this.invincibilityTimer -= deltaTime;
+      if (this.invincibilityTimer <= 0) {
+        this.isInvincible = false;
+      }
+    }
+  }
+
+
+  draw(ctx) {
+
+    if (this.isInvincible) {
+      // Draw with transparency or flashing effect
+      ctx.globalAlpha = 0.5;
+    }
+    ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+    ctx.globalAlpha = 1; 
     // Uncomment the following lines to debug the player's position
     // ctx.strokeStyle = 'red';
     // ctx.strokeRect(this.x, this.y, this.width, this.height);

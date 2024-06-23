@@ -30,4 +30,9 @@ export class CollisionDetector {
   static checkBulletPlayerCollision(bullet, player) {
     return this.checkCollision(bullet, player);
   }
+  static checkBulletPlayerCollision(bullet, player) {
+    if (player.isInvincible) return false;
+    return this.checkCollision(bullet, player);
+  }
+
 }
