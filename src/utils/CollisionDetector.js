@@ -47,7 +47,6 @@ export class CollisionDetector {
     return collisions;
   }
 
-  // Add this new method for barrier collision detection
   static checkBulletBarrierCollisions(bullets, barriers) {
     const collisions = [];
     for (let bulletIndex = 0; bulletIndex < bullets.length; bulletIndex++) {
@@ -57,6 +56,21 @@ export class CollisionDetector {
         if (barrier.checkCollision(bullet)) {
           collisions.push({ bulletIndex, barrierIndex });
           break; // A bullet can only collide with one barrier
+        }
+      }
+    }
+    return collisions;
+  }
+
+  // Add this new method for enemy-barrier collision detection
+  static checkEnemyBarrierCollisions(enemies, barriers) {
+    const collisions = [];
+    for (let enemyIndex = 0; enemyIndex < enemies.length; enemyIndex++) {
+      const enemy = enemies[enemyIndex];
+      for (let barrierIndex = 0; barrierIndex < barriers.length; barrierIndex++) {
+        const barrier = barriers[barrierIndex];
+        if (this.checkCollision(enemy, barrier)) {
+          collisions.push({ enemyIndex, barrierIndex });
         }
       }
     }

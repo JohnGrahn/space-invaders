@@ -4,7 +4,7 @@ import { Renderer } from "./Renderer.js";
 import { InputHandler } from "./InputHandler.js";
 import { CollisionDetector } from "../utils/CollisionDetector.js";
 import { EnemyController } from "./EnemyController.js";
-import { Barrier } from "./Barrier.js"; // Add this import
+import { Barrier } from "./Barrier.js";
 
 export class Game {
   constructor(canvas) {
@@ -18,7 +18,7 @@ export class Game {
     this.lastTime = 0;
     this.enemyController = new EnemyController(canvas.width);
     this.enemyShootProbability = 0.02;
-    this.barriers = this.createBarriers(); // Add this line
+    this.barriers = this.createBarriers();
     this.addClickListener();
   }
 
@@ -49,6 +49,7 @@ export class Game {
     this.handleCollisions();
     this.checkWinCondition();
     this.handleEnemyShooting();
+    this.handleEnemyBarrierCollisions();
   }
 
   updatePlayer(deltaTime) {
@@ -111,6 +112,17 @@ export class Game {
     }
   }
 
+  handleEnemyBarrierCollisions() {
+    const enemies = this.enemyController.getEnemies();
+    for (let enemy of enemies) {
+      for (let barrier of this.barriers) {
+        barrier.checkCollision(enemy);
+      }
+    }
+    // Remove completely destroyed barriers
+    this.barriers = this.barriers.filter(barrier => !barrier.isDestroyed());
+  }
+
   playerHit() {
     if (!this.player.isInvincible) {
       this.gameState.decreaseLives();
@@ -145,7 +157,7 @@ export class Game {
   draw() {
     this.renderer.drawBackground(this.groundHeight);
     this.renderer.drawEntities(this.player, this.enemyController, this.bullets);
-    this.barriers.forEach(barrier => barrier.draw(this.renderer.ctx)); // Add this line
+    this.barriers.forEach(barrier => barrier.draw(this.renderer.ctx));
     this.renderer.drawUI(this.gameState.score, this.gameState.lives);
     if (this.gameState.isGameOver) {
       this.renderer.drawGameOverMessage(this.gameState.hasWon);
@@ -167,7 +179,7 @@ export class Game {
     this.player = new Player(this.canvas, this.groundHeight);
     this.enemyController = new EnemyController(this.canvas.width);
     this.bullets = [];
-    this.barriers = this.createBarriers(); // Add this line
+    this.barriers = this.createBarriers();
   }
 
   start() {
