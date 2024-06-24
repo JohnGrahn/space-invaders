@@ -1,4 +1,3 @@
-// src/components/Bullet.js
 export class Bullet {
   constructor(x, y, speed, isPlayerBullet) {
     this.x = x;
@@ -7,8 +6,11 @@ export class Bullet {
     this.height = 15;
     this.speed = speed;
     this.isPlayerBullet = isPlayerBullet;
-    this.image = new Image();
-    this.image.src = './assets/bullet.svg';
+
+    if (isPlayerBullet) {
+      this.image = new Image();
+      this.image.src = './assets/bullet.svg';
+    }
   }
 
   update() {
@@ -16,6 +18,18 @@ export class Bullet {
   }
 
   draw(ctx) {
-    ctx.drawImage(this.image, this.x - this.width / 2, this.y, this.width, this.height);
+    if (this.isPlayerBullet) {
+      ctx.drawImage(this.image, this.x - this.width / 2, this.y, this.width, this.height);
+    } else {
+      // Draw lightning bolt for enemy bullet
+      ctx.beginPath();
+      ctx.moveTo(this.x, this.y);
+      ctx.lineTo(this.x - 3, this.y + 5);
+      ctx.lineTo(this.x + 2, this.y + 8);
+      ctx.lineTo(this.x - 1, this.y + 15);
+      ctx.strokeStyle = 'yellow';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
   }
 }
