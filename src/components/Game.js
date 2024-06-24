@@ -4,6 +4,7 @@ import { Renderer } from "./Renderer.js";
 import { InputHandler } from "./InputHandler.js";
 import { CollisionDetector } from "../utils/CollisionDetector.js";
 import { EnemyController } from "./EnemyController.js";
+import { Barrier } from "./Barrier.js"; // Add this import
 
 export class Game {
   constructor(canvas) {
@@ -17,7 +18,20 @@ export class Game {
     this.lastTime = 0;
     this.enemyController = new EnemyController(canvas.width);
     this.enemyShootProbability = 0.02;
+    this.barriers = this.createBarriers(); // Add this line
     this.addClickListener();
+  }
+
+  createBarriers() {
+    const barrierWidth = 60;
+    const barrierHeight = 40;
+    const gap = (this.canvas.width - barrierWidth * 4) / 5;
+    return [
+      new Barrier(gap, this.canvas.height - 150, barrierWidth, barrierHeight),
+      new Barrier(gap * 2 + barrierWidth, this.canvas.height - 150, barrierWidth, barrierHeight),
+      new Barrier(gap * 3 + barrierWidth * 2, this.canvas.height - 150, barrierWidth, barrierHeight),
+      new Barrier(gap * 4 + barrierWidth * 3, this.canvas.height - 150, barrierWidth, barrierHeight)
+    ];
   }
 
   addClickListener() {
@@ -65,6 +79,16 @@ export class Game {
         this.playerHit();
         this.bullets.splice(this.bullets.indexOf(bullet), 1);
       }
+    });
+
+    // Check for bullet collisions with barriers
+    this.bullets = this.bullets.filter(bullet => {
+      for (let barrier of this.barriers) {
+        if (barrier.checkCollision(bullet)) {
+          return false; // Remove the bullet
+        }
+      }
+      return true; // Keep the bullet
     });
 
     // Remove bullets that are off-screen
@@ -121,6 +145,7 @@ export class Game {
   draw() {
     this.renderer.drawBackground(this.groundHeight);
     this.renderer.drawEntities(this.player, this.enemyController, this.bullets);
+    this.barriers.forEach(barrier => barrier.draw(this.renderer.ctx)); // Add this line
     this.renderer.drawUI(this.gameState.score, this.gameState.lives);
     if (this.gameState.isGameOver) {
       this.renderer.drawGameOverMessage(this.gameState.hasWon);
@@ -142,6 +167,7 @@ export class Game {
     this.player = new Player(this.canvas, this.groundHeight);
     this.enemyController = new EnemyController(this.canvas.width);
     this.bullets = [];
+    this.barriers = this.createBarriers(); // Add this line
   }
 
   start() {
