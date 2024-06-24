@@ -28,11 +28,22 @@ export class CollisionDetector {
   }
 
   static checkBulletPlayerCollision(bullet, player) {
-    return this.checkCollision(bullet, player);
-  }
-  static checkBulletPlayerCollision(bullet, player) {
     if (player.isInvincible) return false;
     return this.checkCollision(bullet, player);
   }
 
+  static checkBulletBulletCollisions(playerBullets, enemyBullets) {
+    const collisions = [];
+    for (let pBulletIndex = 0; pBulletIndex < playerBullets.length; pBulletIndex++) {
+      const playerBullet = playerBullets[pBulletIndex];
+      for (let eBulletIndex = 0; eBulletIndex < enemyBullets.length; eBulletIndex++) {
+        const enemyBullet = enemyBullets[eBulletIndex];
+        if (this.checkCollision(playerBullet, enemyBullet)) {
+          collisions.push({ playerBulletIndex: pBulletIndex, enemyBulletIndex: eBulletIndex });
+          break; // A player bullet can only collide with one enemy bullet
+        }
+      }
+    }
+    return collisions;
+  }
 }

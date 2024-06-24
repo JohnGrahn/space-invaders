@@ -46,20 +46,38 @@ export class Game {
   }
 
   updateBullets(deltaTime) {
-    this.bullets = this.bullets.filter(bullet => {
-      bullet.update(deltaTime);
-      if (!bullet.isPlayerBullet && CollisionDetector.checkBulletPlayerCollision(bullet, this.player)) {
-        this.playerHit();
-        return false;
-      }
-      return bullet.y > 0 && bullet.y < this.canvas.height;
+    const playerBullets = this.bullets.filter(bullet => bullet.isPlayerBullet);
+    const enemyBullets = this.bullets.filter(bullet => !bullet.isPlayerBullet);
+
+    // Update all bullets
+    this.bullets.forEach(bullet => bullet.update(deltaTime));
+
+    // Check for player-enemy bullet collisions
+    const bulletCollisions = CollisionDetector.checkBulletBulletCollisions(playerBullets, enemyBullets);
+    bulletCollisions.forEach(({ playerBulletIndex, enemyBulletIndex }) => {
+      this.bullets.splice(this.bullets.indexOf(playerBullets[playerBulletIndex]), 1);
+      this.bullets.splice(this.bullets.indexOf(enemyBullets[enemyBulletIndex]), 1);
     });
+
+    // Check for enemy bullets hitting the player
+    enemyBullets.forEach(bullet => {
+      if (CollisionDetector.checkBulletPlayerCollision(bullet, this.player)) {
+        this.playerHit();
+        this.bullets.splice(this.bullets.indexOf(bullet), 1);
+      }
+    });
+
+    // Remove bullets that are off-screen
+    this.bullets = this.bullets.filter(bullet => bullet.y > 0 && bullet.y < this.canvas.height);
   }
 
   handleCollisions() {
-    const bulletEnemyCollisions = CollisionDetector.checkBulletEnemyCollisions(this.bullets, this.enemyController.getEnemies());
+    const bulletEnemyCollisions = CollisionDetector.checkBulletEnemyCollisions(
+      this.bullets.filter(bullet => bullet.isPlayerBullet),
+      this.enemyController.getEnemies()
+    );
     bulletEnemyCollisions.forEach(({ bulletIndex, enemyIndex }) => {
-      this.bullets.splice(bulletIndex, 1);
+      this.bullets.splice(this.bullets.findIndex(b => b.isPlayerBullet), 1);
       this.enemyController.removeEnemy(enemyIndex);
       this.gameState.increaseScore(10);
     });
