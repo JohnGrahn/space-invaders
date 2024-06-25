@@ -23,16 +23,17 @@ export class Game {
   }
 
   createBarriers() {
-    const barrierWidth = 60;
-    const barrierHeight = 40;
+    const barrierWidth = 100;
+    const barrierHeight = 60;
     const gap = (this.canvas.width - barrierWidth * 4) / 5;
     return [
-      new Barrier(gap, this.canvas.height - 150, barrierWidth, barrierHeight),
-      new Barrier(gap * 2 + barrierWidth, this.canvas.height - 150, barrierWidth, barrierHeight),
-      new Barrier(gap * 3 + barrierWidth * 2, this.canvas.height - 150, barrierWidth, barrierHeight),
-      new Barrier(gap * 4 + barrierWidth * 3, this.canvas.height - 150, barrierWidth, barrierHeight)
+      new Barrier(gap, this.canvas.height - 180, barrierWidth, barrierHeight),
+      new Barrier(gap * 2 + barrierWidth, this.canvas.height - 180, barrierWidth, barrierHeight),
+      new Barrier(gap * 3 + barrierWidth * 2, this.canvas.height - 180, barrierWidth, barrierHeight),
+      new Barrier(gap * 4 + barrierWidth * 3, this.canvas.height - 180, barrierWidth, barrierHeight)
     ];
   }
+  
 
   addClickListener() {
     this.canvas.addEventListener('click', () => {
