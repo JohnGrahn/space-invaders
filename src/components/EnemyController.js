@@ -6,19 +6,26 @@ export class EnemyController {
     this.enemies = [];
     this.canvasWidth = canvasWidth;
     this.direction = 1;
-    this.speed = 30; // pixels per second
+    this.baseSpeed = 250; // Base speed in pixels per second
+    this.speed = this.baseSpeed;
     this.moveDownDistance = 20;
     this.timeSinceLastMove = 0;
     this.moveInterval = 1; // Move every second
     this.enemyTypes = ["squid", "invader", "invader", "enemy", "crab"];
-    this.spawnEnemies();
   }
 
-  spawnEnemies() {
-    for (let i = 0; i < 5; i++) {
-      for (let j = 0; j < 11; j++) {
-        const enemyType = this.enemyTypes[i];
-        this.enemies.push(new Enemy(j * 50 + 30, i * 50 + 30, enemyType));
+  spawnEnemies(wave) {
+    this.enemies = [];
+    this.speed = this.baseSpeed + (wave - 1) * 5; // Increase speed with each wave
+    const rows = Math.min(5, 3 + Math.floor(wave / 2)); // Increase rows with waves, max 5
+    const cols = Math.min(11, 7 + Math.floor(wave / 3)); // Increase columns with waves, max 11
+
+    for (let i = 0; i < rows; i++) {
+      for (let j = 0; j < cols; j++) {
+        const enemyType = this.enemyTypes[i % this.enemyTypes.length];
+        const x = j * 50 + (this.canvasWidth - cols * 50) / 2;
+        const y = i * 50 + 30;
+        this.enemies.push(new Enemy(x, y, enemyType, this.speed / 30)); // Pass speed to Enemy constructor
       }
     }
   }
@@ -37,7 +44,6 @@ export class EnemyController {
   shoot() {
     const lowestEnemies = this.getLowestEnemiesInColumns();
     if (lowestEnemies.length === 0) return null;
-    
     const shootingEnemy = lowestEnemies[Math.floor(Math.random() * lowestEnemies.length)];
     return new Bullet(
       shootingEnemy.x + shootingEnemy.width / 2,
@@ -71,7 +77,7 @@ export class EnemyController {
 
     this.enemies.forEach((enemy) => {
       enemy.move(
-        this.speed * this.direction,
+        this.speed * this.direction * (1 / 60), // Adjust for 60 FPS
         moveDown ? this.moveDownDistance : 0
       );
     });
@@ -89,8 +95,8 @@ export class EnemyController {
 
   shouldMoveDown(leftmostEnemy, rightmostEnemy) {
     return (
-      (this.direction === 1 && rightmostEnemy.x + rightmostEnemy.width + this.speed > this.canvasWidth) ||
-      (this.direction === -1 && leftmostEnemy.x - this.speed < 0)
+      (this.direction === 1 && rightmostEnemy.x + rightmostEnemy.width + this.speed / 60 > this.canvasWidth) ||
+      (this.direction === -1 && leftmostEnemy.x - this.speed / 60 < 0)
     );
   }
 

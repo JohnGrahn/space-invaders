@@ -22,6 +22,10 @@ export class Game {
     this.barriers = this.createBarriers();
     this.isGameStarted = false;
     this.startMenu = new StartMenu(canvas);
+    this.currentWave = 1;
+    this.isWaveCleared = false;
+    this.waveClearDelay = 3000; // 3 seconds delay between waves
+    this.waveClearTimer = 0;
     this.addClickListener();
   }
 
@@ -45,6 +49,7 @@ export class Game {
         const y = event.clientY - rect.top;
         if (this.startMenu.isStartButtonClicked(x, y)) {
           this.isGameStarted = true;
+          this.startWave();
         }
       } else if (this.gameState.isGameOver) {
         this.restart();
@@ -60,11 +65,19 @@ export class Game {
 
     if (this.gameState.isGameOver) return;
 
+    if (this.isWaveCleared) {
+      this.waveClearTimer += deltaTime * 1000;
+      if (this.waveClearTimer >= this.waveClearDelay) {
+        this.startNextWave();
+      }
+      return;
+    }
+
     this.updatePlayer(deltaTime);
     this.enemyController.update(deltaTime);
     this.updateBullets(deltaTime);
     this.handleCollisions();
-    this.checkWinCondition();
+    this.checkWaveCompletion();
     this.handleEnemyShooting();
     this.handleEnemyBarrierCollisions();
   }
@@ -156,11 +169,22 @@ export class Game {
     }
   }
 
-  checkWinCondition() {
+  checkWaveCompletion() {
     if (this.enemyController.getEnemies().length === 0) {
-      this.gameState.hasWon = true;
-      this.gameState.isGameOver = true;
+      this.isWaveCleared = true;
+      this.waveClearTimer = 0;
     }
+  }
+
+  startWave() {
+    this.isWaveCleared = false;
+    this.enemyController.spawnEnemies(this.currentWave);
+    this.enemyShootProbability = Math.min(0.02 + (this.currentWave - 1) * 0.005, 0.05);
+  }
+
+  startNextWave() {
+    this.currentWave++;
+    this.startWave();
   }
 
   handleEnemyShooting() {
@@ -182,9 +206,11 @@ export class Game {
       this.renderer.drawBackground(this.groundHeight);
       this.renderer.drawEntities(this.player, this.enemyController, this.bullets);
       this.barriers.forEach(barrier => barrier.draw(this.renderer.ctx));
-      this.renderer.drawUI(this.gameState.score, this.gameState.lives);
+      this.renderer.drawUI(this.gameState.score, this.gameState.lives, this.currentWave);
       if (this.gameState.isGameOver) {
         this.renderer.drawGameOverMessage(this.gameState.hasWon);
+      } else if (this.isWaveCleared) {
+        this.renderer.drawWaveClearedMessage(this.currentWave + 1);
       }
     }
   }
@@ -206,6 +232,9 @@ export class Game {
     this.bullets = [];
     this.barriers = this.createBarriers();
     this.isGameStarted = false;
+    this.currentWave = 1;
+    this.isWaveCleared = false;
+    this.enemyShootProbability = 0.02;
   }
 
   start() {
