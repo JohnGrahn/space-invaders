@@ -5,6 +5,7 @@ import { InputHandler } from "./InputHandler.js";
 import { CollisionDetector } from "../utils/CollisionDetector.js";
 import { EnemyController } from "./EnemyController.js";
 import { Barrier } from "./Barrier.js";
+import { StartMenu } from './StartMenu.js';
 
 export class Game {
   constructor(canvas) {
@@ -19,6 +20,8 @@ export class Game {
     this.enemyController = new EnemyController(canvas.width);
     this.enemyShootProbability = 0.02;
     this.barriers = this.createBarriers();
+    this.isGameStarted = false;
+    this.startMenu = new StartMenu(canvas);
     this.addClickListener();
   }
 
@@ -33,15 +36,28 @@ export class Game {
       new Barrier(gap * 4 + barrierWidth * 3, this.canvas.height - 180, barrierWidth, barrierHeight)
     ];
   }
-  
 
   addClickListener() {
-    this.canvas.addEventListener('click', () => {
-      if (this.gameState.isGameOver) this.restart();
+    this.canvas.addEventListener('click', (event) => {
+      if (!this.isGameStarted) {
+        const rect = this.canvas.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+        if (this.startMenu.isStartButtonClicked(x, y)) {
+          this.isGameStarted = true;
+        }
+      } else if (this.gameState.isGameOver) {
+        this.restart();
+      }
     });
   }
 
   update(deltaTime) {
+    if (!this.isGameStarted) {
+      this.showStartMenu();
+      return;
+    }
+
     if (this.gameState.isGameOver) return;
 
     this.updatePlayer(deltaTime);
@@ -51,6 +67,10 @@ export class Game {
     this.checkWinCondition();
     this.handleEnemyShooting();
     this.handleEnemyBarrierCollisions();
+  }
+
+  showStartMenu() {
+    this.startMenu.draw(this.renderer.ctx);
   }
 
   updatePlayer(deltaTime) {
@@ -156,12 +176,16 @@ export class Game {
   }
 
   draw() {
-    this.renderer.drawBackground(this.groundHeight);
-    this.renderer.drawEntities(this.player, this.enemyController, this.bullets);
-    this.barriers.forEach(barrier => barrier.draw(this.renderer.ctx));
-    this.renderer.drawUI(this.gameState.score, this.gameState.lives);
-    if (this.gameState.isGameOver) {
-      this.renderer.drawGameOverMessage(this.gameState.hasWon);
+    if (!this.isGameStarted) {
+      this.showStartMenu();
+    } else {
+      this.renderer.drawBackground(this.groundHeight);
+      this.renderer.drawEntities(this.player, this.enemyController, this.bullets);
+      this.barriers.forEach(barrier => barrier.draw(this.renderer.ctx));
+      this.renderer.drawUI(this.gameState.score, this.gameState.lives);
+      if (this.gameState.isGameOver) {
+        this.renderer.drawGameOverMessage(this.gameState.hasWon);
+      }
     }
   }
 
@@ -181,6 +205,7 @@ export class Game {
     this.enemyController = new EnemyController(this.canvas.width);
     this.bullets = [];
     this.barriers = this.createBarriers();
+    this.isGameStarted = false;
   }
 
   start() {
