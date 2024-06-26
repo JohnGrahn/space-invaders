@@ -4,7 +4,7 @@ export class Barrier {
     this.y = y;
     this.width = width;
     this.height = height;
-    this.cellSize = 4; // Smaller cell size for more detail
+    this.cellSize = 2; // Smaller cell size for more detail
     this.grid = this.createGrid();
   }
 

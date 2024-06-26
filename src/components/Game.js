@@ -23,7 +23,7 @@ export class Game {
   }
 
   createBarriers() {
-    const barrierWidth = 100;
+    const barrierWidth = 80;
     const barrierHeight = 60;
     const gap = (this.canvas.width - barrierWidth * 4) / 5;
     return [
