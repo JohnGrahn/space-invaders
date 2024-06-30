@@ -6,6 +6,7 @@ import { CollisionDetector } from "../utils/CollisionDetector.js";
 import { EnemyController } from "./EnemyController.js";
 import { Barrier } from "./Barrier.js";
 import { StartMenu } from './StartMenu.js';
+import { Leaderboard } from './LeaderBoard.js';
 
 export class Game {
   constructor(canvas) {
@@ -26,7 +27,24 @@ export class Game {
     this.isWaveCleared = false;
     this.waveClearDelay = 3000; // 3 seconds delay between waves
     this.waveClearTimer = 0;
+    this.leaderboard = new Leaderboard();
+    this.playerName = '';
     this.addClickListener();
+  }
+
+  async gameOver() {
+    this.gameState.isGameOver = true;
+    if (this.gameState.score > 0) {
+      this.playerName = await this.promptPlayerName();
+      await this.leaderboard.addScore(this.playerName, this.gameState.score);
+    }
+  }
+
+  async promptPlayerName() {
+    return new Promise((resolve) => {
+      const name = prompt('Enter your name for the leaderboard:');
+      resolve(name || 'Anonymous');
+    });
   }
 
   createBarriers() {
@@ -42,14 +60,22 @@ export class Game {
   }
 
   addClickListener() {
-    this.canvas.addEventListener('click', (event) => {
-      if (!this.isGameStarted) {
-        const rect = this.canvas.getBoundingClientRect();
-        const x = event.clientX - rect.left;
-        const y = event.clientY - rect.top;
+    this.canvas.addEventListener('click', async (event) => {
+      const rect = this.canvas.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+
+      if (this.leaderboard.isVisible) {
+        if (this.leaderboard.isCloseButtonClicked(x, y, this.canvas)) {
+          this.leaderboard.toggleVisibility();
+        }
+      } else if (!this.isGameStarted) {
         if (this.startMenu.isStartButtonClicked(x, y)) {
           this.isGameStarted = true;
           this.startWave();
+        } else if (this.startMenu.isLeaderboardButtonClicked(x, y)) {
+          await this.leaderboard.getScores();
+          this.leaderboard.toggleVisibility();
         }
       } else if (this.gameState.isGameOver) {
         this.restart();
@@ -161,7 +187,7 @@ export class Game {
     if (!this.player.isInvincible) {
       this.gameState.decreaseLives();
       if (this.gameState.lives <= 0) {
-        this.gameState.isGameOver = true;
+        this.gameOver();
       } else {
         this.player.reset();
         this.player.makeInvincible(); // Apply invincibility after hit
@@ -213,6 +239,9 @@ export class Game {
         this.renderer.drawWaveClearedMessage(this.currentWave + 1);
       }
     }
+    
+    // Draw the leaderboard if it's visible
+    this.leaderboard.show(this.renderer.ctx, this.canvas);
   }
 
   gameLoop(currentTime) {

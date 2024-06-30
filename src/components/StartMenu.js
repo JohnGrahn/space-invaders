@@ -9,6 +9,7 @@ export class StartMenu {
     this.stars = this.createStars(200); // Create 200 stars
     this.fallingAssets = this.createFallingAssets(40); // Create 40 falling assets (10 of each type)
     this.loadAssets();
+    this.leaderboardButton = { x: this.canvas.width / 2 - 100, y: this.canvas.height / 2 + 80, width: 200, height: 50 };
   }
 
   createStars(count) {
@@ -81,7 +82,7 @@ export class StartMenu {
 
     // Clear area for "Space Invaders" text
     this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-    this.ctx.fillRect(this.canvas.width / 2 - 200, this.canvas.height / 2 - 100, 400, 100);
+    this.ctx.fillRect(this.canvas.width / 2 - 200, this.canvas.height / 2 - 100, 400, 200);
 
     // Draw menu text
     this.ctx.fillStyle = 'white';
@@ -95,6 +96,22 @@ export class StartMenu {
     this.ctx.fillStyle = 'white';
     this.ctx.font = '24px Arial';
     this.ctx.fillText('Start', this.canvas.width / 2, this.canvas.height / 2 + 48);
+
+    // Draw leaderboard button
+    this.ctx.fillStyle = 'blue';
+    this.ctx.fillRect(this.leaderboardButton.x, this.leaderboardButton.y, this.leaderboardButton.width, this.leaderboardButton.height);
+    this.ctx.fillStyle = 'white';
+    this.ctx.font = '24px Arial';
+    this.ctx.fillText('Leaderboard', this.canvas.width / 2, this.leaderboardButton.y + 32);
+  }
+
+  isLeaderboardButtonClicked(x, y) {
+    return (
+      x > this.leaderboardButton.x &&
+      x < this.leaderboardButton.x + this.leaderboardButton.width &&
+      y > this.leaderboardButton.y &&
+      y < this.leaderboardButton.y + this.leaderboardButton.height
+    );
   }
 
   isStartButtonClicked(x, y) {
