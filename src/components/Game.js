@@ -36,7 +36,7 @@ export class Game {
     this.gameState.isGameOver = true;
     if (this.gameState.score > 0) {
       this.playerName = await this.promptPlayerName();
-      await this.leaderboard.addScore(this.playerName, this.gameState.score);
+      await this.leaderboard.addScore(this.playerName, this.gameState.score, this.currentWave);
     }
   }
 

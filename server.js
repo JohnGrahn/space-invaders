@@ -17,15 +17,16 @@ pool.query(`
     id SERIAL PRIMARY KEY,
     name VARCHAR(50) NOT NULL,
     score INTEGER NOT NULL,
+    waves INTEGER NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   )
 `);
 
 // Add score to leaderboard
 app.post('/api/leaderboard', async (req, res) => {
-  const { name, score } = req.body;
+  const { name, score, waves } = req.body;
   try {
-    await pool.query('INSERT INTO leaderboard (name, score) VALUES ($1, $2)', [name, score]);
+    await pool.query('INSERT INTO leaderboard (name, score, waves) VALUES ($1, $2, $3)', [name, score, waves]);
     res.status(201).json({ message: 'Score added successfully' });
   } catch (error) {
     console.error(error);
@@ -36,11 +37,11 @@ app.post('/api/leaderboard', async (req, res) => {
 // Get top 10 scores
 app.get('/api/leaderboard', async (req, res) => {
   try {
-    const result = await pool.query('SELECT name, score FROM leaderboard ORDER BY score DESC LIMIT 10');
+    const result = await pool.query('SELECT name, score, waves FROM leaderboard ORDER BY score DESC LIMIT 10');
     res.json(result.rows);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Error retrieving leaderboard' });
+    console.error('Error fetching leaderboard:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
