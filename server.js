@@ -2,10 +2,27 @@ import express from 'express';
 import pkg from 'pg';
 const { Pool } = pkg;
 import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+// Serve static files from the 'dist' directory
+app.use(express.static(path.join(__dirname, 'dist')));
+
+// Add CSP headers
+app.use((req, res, next) => {
+  res.setHeader(
+    'Content-Security-Policy',
+    "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;"
+  );
+  next();
+});
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -45,5 +62,10 @@ app.get('/api/leaderboard', async (req, res) => {
   }
 });
 
+// Serve index.html for all other routes
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+});
+
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, '0.0.0.0', () => console.log(`Server running on port ${PORT}`));
