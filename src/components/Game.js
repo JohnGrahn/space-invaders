@@ -25,7 +25,7 @@ export class Game {
     this.startMenu = new StartMenu(canvas);
     this.currentWave = 1;
     this.isWaveCleared = false;
-    this.waveClearDelay = 3000; // 3 seconds delay between waves
+    this.waveClearDelay = 3000;
     this.waveClearTimer = 0;
     this.leaderboard = new Leaderboard();
     this.playerName = '';
@@ -76,7 +76,12 @@ export class Game {
         } else if (this.startMenu.isLeaderboardButtonClicked(x, y)) {
           await this.leaderboard.getScores();
           this.leaderboard.toggleVisibility();
+        } else if (this.startMenu.isInstructionsButtonClicked(x, y)) {
+          this.startMenu.showingInstructions = true;
+        } else if (this.startMenu.isBackButtonClicked(x, y)) {
+          this.startMenu.showingInstructions = false;
         }
+        this.startMenu.handleClick(x, y);
       } else if (this.gameState.isGameOver) {
         this.restart();
       }
@@ -109,7 +114,7 @@ export class Game {
   }
 
   showStartMenu() {
-    this.startMenu.draw(this.renderer.ctx);
+    this.startMenu.draw();
   }
 
   updatePlayer(deltaTime) {
@@ -124,17 +129,14 @@ export class Game {
     const playerBullets = this.bullets.filter(bullet => bullet.isPlayerBullet);
     const enemyBullets = this.bullets.filter(bullet => !bullet.isPlayerBullet);
 
-    // Update all bullets
     this.bullets.forEach(bullet => bullet.update(deltaTime));
 
-    // Check for player-enemy bullet collisions
     const bulletCollisions = CollisionDetector.checkBulletBulletCollisions(playerBullets, enemyBullets);
     bulletCollisions.forEach(({ playerBulletIndex, enemyBulletIndex }) => {
       this.bullets.splice(this.bullets.indexOf(playerBullets[playerBulletIndex]), 1);
       this.bullets.splice(this.bullets.indexOf(enemyBullets[enemyBulletIndex]), 1);
     });
 
-    // Check for enemy bullets hitting the player
     enemyBullets.forEach(bullet => {
       if (CollisionDetector.checkBulletPlayerCollision(bullet, this.player)) {
         this.playerHit();
@@ -142,17 +144,15 @@ export class Game {
       }
     });
 
-    // Check for bullet collisions with barriers
     this.bullets = this.bullets.filter(bullet => {
       for (let barrier of this.barriers) {
         if (barrier.checkCollision(bullet)) {
-          return false; // Remove the bullet
+          return false;
         }
       }
-      return true; // Keep the bullet
+      return true;
     });
 
-    // Remove bullets that are off-screen
     this.bullets = this.bullets.filter(bullet => bullet.y > 0 && bullet.y < this.canvas.height);
   }
 
@@ -179,7 +179,6 @@ export class Game {
         barrier.checkCollision(enemy);
       }
     }
-    // Remove completely destroyed barriers
     this.barriers = this.barriers.filter(barrier => !barrier.isDestroyed());
   }
 
@@ -190,7 +189,7 @@ export class Game {
         this.gameOver();
       } else {
         this.player.reset();
-        this.player.makeInvincible(); // Apply invincibility after hit
+        this.player.makeInvincible();
       }
     }
   }
@@ -239,8 +238,6 @@ export class Game {
         this.renderer.drawWaveClearedMessage(this.currentWave + 1);
       }
     }
-    
-    // Draw the leaderboard if it's visible
     this.leaderboard.show(this.renderer.ctx, this.canvas);
   }
 
