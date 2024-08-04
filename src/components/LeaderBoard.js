@@ -6,7 +6,7 @@ export class Leaderboard {
 
   async addScore(name, score, waves) {
     try {
-      const response = await fetch("http://localhost:3000/api/leaderboard", {
+      const response = await fetch("/api/leaderboard", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, score, waves }),
@@ -19,7 +19,7 @@ export class Leaderboard {
 
   async getScores() {
     try {
-      const response = await fetch("http://localhost:3000/api/leaderboard");
+      const response = await fetch("/api/leaderboard");
       if (!response.ok) throw new Error("Failed to fetch leaderboard");
       this.scores = await response.json();
     } catch (error) {
