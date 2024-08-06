@@ -1,12 +1,12 @@
 import { Player } from "./Player.js";
-import { GameState } from "./GameState.js";
-import { Renderer } from "./Renderer.js";
-import { InputHandler } from "./InputHandler.js";
+import { GameState } from "../state/GameState.js";
+import { Renderer } from "../ui/Renderer.js";
+import { InputHandler } from "../utils/InputHandler.js";
 import { CollisionDetector } from "../utils/CollisionDetector.js";
 import { EnemyController } from "./EnemyController.js";
 import { Barrier } from "./Barrier.js";
-import { StartMenu } from './StartMenu.js';
-import { Leaderboard } from './LeaderBoard.js';
+import { StartMenu } from '../ui/StartMenu.js';
+import { Leaderboard } from '../ui/LeaderBoard.js';
 
 export class Game {
   constructor(canvas) {
