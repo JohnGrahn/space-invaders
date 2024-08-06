@@ -32,11 +32,9 @@ export class Renderer {
   drawGameOverMessage(hasWon) {
     this.ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-    
     this.ctx.fillStyle = 'white';
     this.ctx.textAlign = 'center';
     this.ctx.font = '48px Arial';
-    
     if (hasWon) {
       this.ctx.fillText('Congratulations!', this.centerX, this.centerY - 50);
       this.ctx.fillText('You Won!', this.centerX, this.centerY + 10);
@@ -44,7 +42,6 @@ export class Renderer {
       this.ctx.fillText('Game Over', this.centerX, this.centerY - 50);
       this.ctx.fillText('You Lose', this.centerX, this.centerY + 10);
     }
-    
     this.ctx.font = '24px Arial';
     this.ctx.fillText('Click to Play Again', this.centerX, this.centerY + 60);
   }
@@ -52,14 +49,32 @@ export class Renderer {
   drawWaveClearedMessage(nextWave) {
     this.ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-    
     this.ctx.fillStyle = 'white';
     this.ctx.textAlign = 'center';
     this.ctx.font = '48px Arial';
     this.ctx.fillText(`Wave ${nextWave - 1} Cleared!`, this.centerX, this.centerY - 50);
-    
     this.ctx.font = '24px Arial';
     this.ctx.fillText(`Prepare for Wave ${nextWave}`, this.centerX, this.centerY + 10);
     this.ctx.fillText('Next wave starting soon...', this.centerX, this.centerY + 50);
+  }
+
+  drawPauseOverlay() {
+    this.ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    this.ctx.fillStyle = 'white';
+    this.ctx.font = '48px Arial';
+    this.ctx.textAlign = 'center';
+    this.ctx.fillText('PAUSED', this.centerX, this.centerY - 50);
+    this.drawButton('Restart', this.centerX - 100, this.centerY + 50, 200, 50);
+    this.drawButton('End Game', this.centerX - 100, this.centerY + 120, 200, 50);
+  }
+
+  drawButton(text, x, y, width, height) {
+    this.ctx.fillStyle = 'white';
+    this.ctx.fillRect(x, y, width, height);
+    this.ctx.fillStyle = 'black';
+    this.ctx.font = '24px Arial';
+    this.ctx.textAlign = 'center';
+    this.ctx.fillText(text, x + width / 2, y + height / 2 + 8);
   }
 }

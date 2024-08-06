@@ -13,7 +13,7 @@ export class Game {
     this.canvas = canvas;
     this.gameState = new GameState();
     this.renderer = new Renderer(canvas);
-    this.inputHandler = new InputHandler();
+    this.inputHandler = new InputHandler(this);
     this.groundHeight = 50;
     this.player = new Player(canvas, this.groundHeight);
     this.bullets = [];
@@ -29,15 +29,16 @@ export class Game {
     this.waveClearTimer = 0;
     this.leaderboard = new Leaderboard();
     this.playerName = '';
+    this.isPaused = false;
     this.addClickListener();
   }
 
   async gameOver() {
-    this.gameState.isGameOver = true;
     if (this.gameState.score > 0) {
       this.playerName = await this.promptPlayerName();
       await this.leaderboard.addScore(this.playerName, this.gameState.score, this.currentWave);
     }
+    this.draw(); // Redraw to show the game over screen
   }
 
   async promptPlayerName() {
@@ -84,13 +85,44 @@ export class Game {
         this.startMenu.handleClick(x, y);
       } else if (this.gameState.isGameOver) {
         this.restart();
+      } else if (this.isPaused) {
+        if (this.isButtonClicked(x, y, this.canvas.width / 2 - 100, this.canvas.height / 2 + 50, 200, 50)) {
+          this.restart();
+          this.togglePause();
+        } else if (this.isButtonClicked(x, y, this.canvas.width / 2 - 100, this.canvas.height / 2 + 120, 200, 50)) {
+          await this.endGame();
+        }
       }
     });
   }
 
+  isButtonClicked(clickX, clickY, buttonX, buttonY, buttonWidth, buttonHeight) {
+    return clickX >= buttonX && clickX <= buttonX + buttonWidth &&
+           clickY >= buttonY && clickY <= buttonY + buttonHeight;
+  }
+
+  togglePause() {
+    this.isPaused = !this.isPaused;
+  }
+
+  async endGame() {
+    await this.gameOver();
+    this.isGameStarted = false;
+    this.isPaused = false;
+    this.currentWave = 1;
+    this.isWaveCleared = false;
+    this.enemyShootProbability = 0.02;
+    this.waveClearTimer = 0;
+    this.gameState.reset();
+    this.player = new Player(this.canvas, this.groundHeight);
+    this.enemyController = new EnemyController(this.canvas.width);
+    this.bullets = [];
+    this.barriers = this.createBarriers();
+    this.draw(); // Redraw to show the start menu
+  }
+
   update(deltaTime) {
-    if (!this.isGameStarted) {
-      this.showStartMenu();
+    if (!this.isGameStarted || this.isPaused) {
       return;
     }
 
@@ -237,6 +269,9 @@ export class Game {
       } else if (this.isWaveCleared) {
         this.renderer.drawWaveClearedMessage(this.currentWave + 1);
       }
+      if (this.isPaused) {
+        this.renderer.drawPauseOverlay();
+      }
     }
     this.leaderboard.show(this.renderer.ctx, this.canvas);
   }
@@ -257,12 +292,15 @@ export class Game {
     this.enemyController = new EnemyController(this.canvas.width);
     this.bullets = [];
     this.barriers = this.createBarriers();
-    this.isGameStarted = false;
     this.currentWave = 1;
     this.isWaveCleared = false;
     this.enemyShootProbability = 0.02;
+    this.isPaused = false;
+    this.isGameStarted = true;
+    this.waveClearTimer = 0;
+    this.startWave();
   }
-
+  
   start() {
     this.gameLoop(performance.now());
   }
