@@ -7,6 +7,7 @@ import { EnemyController } from "./EnemyController.js";
 import { Barrier } from "./Barrier.js";
 import { StartMenu } from '../ui/StartMenu.js';
 import { Leaderboard } from '../ui/LeaderBoard.js';
+import { AudioManager } from '../audio/AudioManager.js';
 
 export class Game {
   constructor(canvas) {
@@ -30,6 +31,7 @@ export class Game {
     this.leaderboard = new Leaderboard();
     this.playerName = '';
     this.isPaused = false;
+    this.audioManager = new AudioManager();
     this.addClickListener();
   }
 
@@ -66,6 +68,11 @@ export class Game {
       const x = event.clientX - rect.left;
       const y = event.clientY - rect.top;
 
+      if (this.audioManager.isMuteButtonClicked(x, y, this.canvas.width - 40, this.canvas.height - 40)) {
+        this.audioManager.toggleMute();
+        return;
+      }
+
       if (this.leaderboard.isVisible) {
         if (this.leaderboard.isCloseButtonClicked(x, y, this.canvas)) {
           this.leaderboard.toggleVisibility();
@@ -86,11 +93,29 @@ export class Game {
       } else if (this.gameState.isGameOver) {
         this.restart();
       } else if (this.isPaused) {
+        if (this.renderer.isVolumeSliderClicked(this.canvas.width / 2 - 100, this.canvas.height / 2 - 10, x, y)) {
+          const newVolume = this.renderer.getVolumeFromClick(this.canvas.width / 2 - 100, x);
+          this.audioManager.setVolume(newVolume);
+          return;
+        }
         if (this.isButtonClicked(x, y, this.canvas.width / 2 - 100, this.canvas.height / 2 + 50, 200, 50)) {
           this.restart();
           this.togglePause();
         } else if (this.isButtonClicked(x, y, this.canvas.width / 2 - 100, this.canvas.height / 2 + 120, 200, 50)) {
           await this.endGame();
+        }
+      }
+    });
+
+    this.canvas.addEventListener('mousemove', (event) => {
+      if (event.buttons === 1 && this.isPaused) {
+        const rect = this.canvas.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+
+        if (this.renderer.isVolumeSliderClicked(this.canvas.width / 2 - 100, this.canvas.height / 2 - 10, x, y)) {
+          const newVolume = this.renderer.getVolumeFromClick(this.canvas.width / 2 - 100, x);
+          this.audioManager.setVolume(newVolume);
         }
       }
     });
@@ -197,6 +222,7 @@ export class Game {
       this.bullets.splice(this.bullets.findIndex(b => b.isPlayerBullet), 1);
       this.enemyController.removeEnemy(enemyIndex);
       this.gameState.increaseScore(10);
+      this.audioManager.playInvaderKilledSound();
     });
 
     if (CollisionDetector.checkEnemyPlayerCollision(this.enemyController.getEnemies(), this.player)) {
@@ -216,6 +242,7 @@ export class Game {
 
   playerHit() {
     if (!this.player.isInvincible) {
+      this.audioManager.playExplosionSound();
       this.gameState.decreaseLives();
       if (this.gameState.lives <= 0) {
         this.gameOver();
@@ -253,7 +280,10 @@ export class Game {
 
   shoot() {
     const bullet = this.player.shoot();
-    if (bullet) this.bullets.push(bullet);
+    if (bullet) {
+      this.bullets.push(bullet);
+      this.audioManager.playShootSound();
+    }
   }
 
   draw() {
@@ -270,10 +300,11 @@ export class Game {
         this.renderer.drawWaveClearedMessage(this.currentWave + 1);
       }
       if (this.isPaused) {
-        this.renderer.drawPauseOverlay();
+        this.renderer.drawPauseOverlay(this.audioManager);
       }
     }
     this.leaderboard.show(this.renderer.ctx, this.canvas);
+    this.audioManager.drawMuteButton(this.renderer.ctx, this.canvas.width - 40, this.canvas.height - 40);
   }
 
   gameLoop(currentTime) {
